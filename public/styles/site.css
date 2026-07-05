@@ -1,0 +1,328 @@
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+.game-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #c1a87d;
+}
+
+.game-header {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto minmax(260px, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 14px 28px 16px;
+  border-bottom: 3px solid #244b14;
+  color: #f6f0d8;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px),
+    #121212;
+  box-shadow: inset 0 -4px 0 #050505;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
+}
+
+.game-brand {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.brand-rider {
+  width: 81px;
+  height: 102px;
+  flex: 0 0 auto;
+  background: url('/game/sprite-characters.png') 0 0 / 819px 1749px no-repeat;
+  image-rendering: pixelated;
+  transform: scaleX(-1);
+}
+
+.game-header strong {
+  display: block;
+  color: #70e000;
+  font-size: 42px;
+  line-height: 0.95;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+#score-status {
+  display: block;
+  margin-top: 4px;
+  color: #f6f0d8;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.score-chip {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  min-width: 320px;
+  padding: 13px 20px;
+  border: 3px solid #333;
+  border-radius: 8px;
+  color: #f6f0d8;
+  background: #080808;
+  box-shadow: inset 0 0 0 2px #1d1d1d, 4px 4px 0 #000;
+}
+
+.score-chip span:first-child,
+.score-chip span:last-child,
+.score-chip b {
+  color: #70e000;
+}
+
+.game-header-actions,
+#game-account,
+.hud-country-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.game-header-actions {
+  justify-content: flex-end;
+}
+
+.game-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#skifree-canvas {
+  display: block;
+  border: 0;
+  outline: 0;
+}
+
+#skifree-canvas:focus,
+#skifree-canvas:focus-visible {
+  outline: 0;
+}
+
+.score-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  font-family: "Courier New", Courier, monospace;
+}
+
+.score-modal-backdrop[hidden] {
+  display: none;
+}
+
+.score-modal-panel {
+  width: min(440px, calc(100vw - 40px));
+  padding: 24px;
+  border: 4px solid #f6f0d8;
+  color: #f6f0d8;
+  background: #151515;
+  box-shadow: 8px 8px 0 #000;
+  text-align: center;
+}
+
+.score-modal-panel h2 {
+  margin: 4px 0 14px;
+  color: #70e000;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.score-modal-distance {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.score-modal-distance b {
+  color: #70e000;
+}
+
+.score-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.leaderboard-page {
+  min-height: 100vh;
+  color: #f6f0d8;
+  background: #151515;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.leaderboard-shell {
+  width: min(960px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.leaderboard-header {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #70e000;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: #ff4d6d;
+  font-size: 42px;
+  line-height: 1;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.score-panel {
+  border: 4px solid #f6f0d8;
+  background: #252525;
+  box-shadow: 8px 8px 0 #000;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  border-bottom: 2px solid #4b4b4b;
+  text-align: left;
+}
+
+th {
+  color: #70e000;
+}
+
+td:last-child,
+th:last-child {
+  text-align: right;
+}
+
+a,
+button {
+  color: #151515;
+  background: #70e000;
+  border: 0;
+  padding: 14px 18px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.play-link,
+.button,
+.game-header-actions > a {
+  display: inline-block;
+  box-shadow: 4px 4px 0 #000;
+}
+
+.subtle {
+  background: #f6f0d8;
+}
+
+#account {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.country-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+input {
+  width: 120px;
+  padding: 9px;
+  border: 2px solid #f6f0d8;
+  color: #f6f0d8;
+  background: #151515;
+  font: inherit;
+}
+
+.game-header input {
+  width: 120px;
+  padding: 12px;
+  border-width: 3px;
+}
+
+.muted {
+  color: #aaa;
+}
+
+@media (max-width: 900px) {
+  .game-header {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .game-brand {
+    width: 100%;
+  }
+
+  .brand-rider {
+    width: 54px;
+    height: 68px;
+    background-size: 546px 1166px;
+  }
+
+  .game-header strong {
+    font-size: 30px;
+  }
+
+  #score-status {
+    white-space: normal;
+  }
+
+  .score-chip {
+    justify-content: flex-start;
+    min-width: 0;
+    width: calc(100% - 40px);
+  }
+
+  #account,
+  #game-account,
+  .country-form,
+  .hud-country-form,
+  .game-header-actions {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
+  }
+}
