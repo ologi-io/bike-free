@@ -41,26 +41,17 @@ body {
   width: 81px;
   height: 102px;
   flex: 0 0 auto;
-  background: url('/game/sprite-characters.png') 0 0 / 819px 1749px no-repeat;
+  background: url('/game/sprite-characters.png') 0 -111px / 819px 1749px no-repeat;
   image-rendering: pixelated;
-  transform: scaleX(-1);
 }
 
-.game-header strong {
+.game-logo {
   display: block;
   color: #70e000;
-  font-size: 42px;
+  font-size: 46px;
   line-height: 0.95;
   letter-spacing: 0;
   text-transform: uppercase;
-}
-
-#score-status {
-  display: block;
-  margin-top: 4px;
-  color: #f6f0d8;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .score-chip {
@@ -102,8 +93,11 @@ body {
 
 #skifree-canvas {
   display: block;
+  width: auto;
+  height: auto;
   border: 0;
   outline: 0;
+  image-rendering: pixelated;
 }
 
 #skifree-canvas:focus,
@@ -291,15 +285,12 @@ input {
   .brand-rider {
     width: 54px;
     height: 68px;
+    background-position: 0 -74px;
     background-size: 546px 1166px;
   }
 
-  .game-header strong {
+  .game-logo {
     font-size: 30px;
-  }
-
-  #score-status {
-    white-space: normal;
   }
 
   .score-chip {

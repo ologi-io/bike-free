@@ -2250,11 +2250,17 @@ function startNeverEndingGame (images) {
 }
 
 function resizeCanvas() {
-	mainCanvas.width = window.innerWidth;
-	mainCanvas.height = window.innerHeight;
+	var frame = mainCanvas.parentNode;
+	var width = frame.clientWidth;
+	var height = frame.clientHeight;
+	mainCanvas.width = width;
+	mainCanvas.height = height;
+	mainCanvas.style.width = width + 'px';
+	mainCanvas.style.height = height + 'px';
 }
 
 window.addEventListener('resize', resizeCanvas, false);
+if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(mainCanvas.parentNode);
 
 resizeCanvas();
 
