@@ -1,3 +1,6 @@
+// Bike Free game source. Adapted from SkiFree.js:
+// https://github.com/basicallydan/skifree.js
+
 // Global dependencies which return no modules
 require('./lib/canvasRenderingContext2DExtensions');
 require('./lib/extenders');

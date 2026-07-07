@@ -5,8 +5,11 @@
   "description": "Standalone Bike Free game app for playbike.free.",
   "main": "server.js",
   "scripts": {
+    "build": "npm run build:game",
+    "build:game": "browserify public/game/js/main.js -o public/game/dist/bikefree.js",
+    "watch:game": "watchify public/game/js/main.js -o public/game/dist/bikefree.js -v",
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "concurrently -k -n server,game -c green,cyan \"node server.js\" \"npm run watch:game\""
   },
   "engines": {
     "node": ">=20"
@@ -19,5 +22,13 @@
     "mongodb": "^6.12.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
+  },
+  "devDependencies": {
+    "br-mousetrap": "^1.1.3",
+    "browserify": "^17.0.1",
+    "concurrently": "^10.0.3",
+    "eventedloop": "^1.0.1",
+    "hammerjs": "^2.0.8",
+    "watchify": "^4.0.0"
   }
 }
