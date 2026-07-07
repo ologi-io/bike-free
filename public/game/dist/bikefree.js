@@ -7173,10 +7173,10 @@ function startNeverEndingGame (images) {
 		lastHudUpdateAt = now;
 		if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
 		infoBox.setLines([
-			'Bike Free',
+			// 'Bike Free',
 			infoBoxControls,
-			'Travelled ' + distanceTravelledInMetres + 'm',
-			'High Score: ' + highScore,
+			// 'Travelled ' + distanceTravelledInMetres + 'm',
+			// 'High Score: ' + highScore,
 			'Bikers left: ' + livesLeft
 		]);
 	}
@@ -7267,10 +7267,10 @@ function startNeverEndingGame (images) {
 
 	infoBox = new InfoBox({
 		initialLines : [
-			'Bike Free',
+			// 'Bike Free',
 			infoBoxControls,
-			'Travelled 0m',
-			'High Score: ' + highScore,
+			// 'Travelled 0m',
+			// 'High Score: ' + highScore,
 			'Bikers left: ' + livesLeft
 		],
 		position: {
