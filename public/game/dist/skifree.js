@@ -583,6 +583,37 @@ CanvasRenderingContext2D.prototype.getRandomMapPositionBelowViewport = function 
 	return this.canvasPositionToMapPosition([ xCanvas, yCanvas ]);
 };
 
+CanvasRenderingContext2D.prototype.getRandomMapPositionInFrontOfSprite = function (sprite) {
+	var centre = this.getCentralPosition().canvas;
+	var dx = 0;
+	var dy = 1;
+
+	if (typeof sprite.direction !== 'undefined') {
+		var radians = (sprite.direction - 90) * (Math.PI / 180);
+		dx = Math.cos(radians);
+		dy = Math.sin(radians);
+	} else if (sprite.movingToward) {
+		dx = sprite.movingToward[0] - sprite.mapPosition[0];
+		dy = sprite.movingToward[1] - sprite.mapPosition[1];
+	}
+
+	var length = Math.sqrt(dx * dx + dy * dy) || 1;
+	dx = dx / length;
+	dy = dy / length;
+
+	var buffer = 100;
+	var halfWidth = this.canvas.width / 2;
+	var halfHeight = this.canvas.height / 2;
+	var xDistance = dx === 0 ? Infinity : (halfWidth + buffer) / Math.abs(dx);
+	var yDistance = dy === 0 ? Infinity : (halfHeight + buffer) / Math.abs(dy);
+	var forwardDistance = Math.min(xDistance, yDistance);
+	var lateralDistance = Number.random(-Math.max(halfWidth, halfHeight), Math.max(halfWidth, halfHeight));
+	var xCanvas = centre[0] + (dx * forwardDistance) - (dy * lateralDistance);
+	var yCanvas = centre[1] + (dy * forwardDistance) + (dx * lateralDistance);
+
+	return this.canvasPositionToMapPosition([ xCanvas, yCanvas ]);
+};
+
 CanvasRenderingContext2D.prototype.getRandomMapPositionAboveViewport = function () {
 	var xCanvas = this.getRandomlyInTheCentreOfCanvas();
 	var yCanvas = this.getAboveViewport();
@@ -628,6 +659,8 @@ var EventedLoop = require('eventedloop');
 		var beforeCycleCallbacks = [];
 		var afterCycleCallbacks = [];
 		var gameLoop = new EventedLoop();
+		var backgroundImageKey = null;
+		var startHeaderImageKey = null;
 
 		this.addStaticObject = function (sprite) {
 			staticObjects.push(sprite);
@@ -651,6 +684,14 @@ var EventedLoop = require('eventedloop');
 
 		this.addUIElement = function (element) {
 			uiElements.push(element);
+		};
+
+		this.setBackgroundImage = function (imageKey) {
+			backgroundImageKey = imageKey;
+		};
+
+		this.setStartHeaderImage = function (imageKey) {
+			startHeaderImageKey = imageKey;
 		};
 
 		this.beforeCycle = function (callback) {
@@ -713,9 +754,48 @@ var EventedLoop = require('eventedloop');
 			});
 		};
 
+		function drawBackground () {
+			var image = backgroundImageKey && dContext.getLoadedImage(backgroundImageKey);
+			if (!image) return;
+
+			var origin = dContext.mapPositionToCanvasPosition([0, 0]);
+			var tileWidth = image.naturalWidth || image.width;
+			var tileHeight = image.naturalHeight || image.height;
+			var startX = origin[0] % tileWidth;
+			var startY = origin[1] % tileHeight;
+			if (startX > 0) startX -= tileWidth;
+			if (startY > 0) startY -= tileHeight;
+
+			for (var x = startX; x < mainCanvas.width; x += tileWidth) {
+				for (var y = startY; y < mainCanvas.height; y += tileHeight) {
+					dContext.drawImage(image, Math.round(x), Math.round(y));
+				}
+			}
+		}
+
+		function drawStartHeader () {
+			var image = startHeaderImageKey && dContext.getLoadedImage(startHeaderImageKey);
+			if (!image) return;
+
+			var width = image.naturalWidth || image.width;
+			var topLeft = dContext.mapPositionToCanvasPosition([
+				0 - (width / 2),
+				0 - (mainCanvas.height / 2)
+			]);
+			var startX = topLeft[0] % width;
+			if (startX > 0) startX -= width;
+
+			for (var x = startX; x < mainCanvas.width; x += width) {
+				dContext.drawImage(image, Math.round(x), Math.round(topLeft[1]));
+			}
+		}
+
 		that.draw = function () {
 			// Clear canvas
 			mainCanvas.width = mainCanvas.width;
+			dContext.imageSmoothingEnabled = false;
+			drawBackground();
+			drawStartHeader();
 			
 			// so the rider is always in front of the bushes.
 			staticObjects.each(function (staticObject, i) {
@@ -753,6 +833,12 @@ var EventedLoop = require('eventedloop');
 		this.pause = function () {
 			paused = true;
 			gameLoop.stop();
+		};
+
+		this.resume = function () {
+			if (!paused) return;
+			paused = false;
+			gameLoop.start();
 		};
 
 		this.isPaused = function () {
@@ -810,6 +896,9 @@ if (typeof module !== 'undefined') {
 },{}],6:[function(require,module,exports){
 function InfoBox(data) {
 	var that = this;
+	var layout = [];
+	var layoutKey = '';
+	var layoutCanvasWidth = 0;
 
 	that.lines = data.initialLines;
 
@@ -822,12 +911,23 @@ function InfoBox(data) {
 	that.height = data.height;
 
 	that.setLines = function (lines) {
+		var same = lines.length === that.lines.length;
+		for (var i = 0; same && i < lines.length; i += 1) {
+			same = lines[i] === that.lines[i];
+		}
+		if (same) return;
+
 		that.lines = lines;
+		layoutKey = '';
 	};
 
-	that.draw = function (dContext) {
+	function getLayout (dContext) {
 		dContext.font = '11px monospace';
+		var key = that.lines.join('\n');
+		if (layoutKey === key && layoutCanvasWidth === dContext.canvas.width) return layout;
+
 		var yOffset = 0;
+		layout = [];
 		that.lines.each(function (line) {
 			var fontSize = +dContext.font.slice(0,2);
 			var textWidth = dContext.measureText(line).width;
@@ -847,8 +947,16 @@ function InfoBox(data) {
 
 			yOffset += textHeight;
 
+			layout.push({ line: line, x: xPos, y: yPos });
+		});
+		layoutKey = key;
+		layoutCanvasWidth = dContext.canvas.width;
+		return layout;
+	}
 
-			dContext.fillText(line, xPos, yPos);
+	that.draw = function (dContext) {
+		getLayout(dContext).each(function (item) {
+			dContext.fillText(item.line, item.x, item.y);
 		});
 	};
 
@@ -1114,6 +1222,8 @@ if (typeof navigator !== 'undefined') {
 		}
 
 		function setDiscreteDirection(d) {
+			if (that.hasBeenHit || that.isBeingEaten) return;
+
 			if (discreteDirections[d]) {
 				that.setDirection(discreteDirections[d]);
 			}
@@ -1208,10 +1318,12 @@ if (typeof navigator !== 'undefined') {
 		};
 
 		that.stepWest = function () {
+			if (that.hasBeenHit || that.isBeingEaten) return;
 			that.mapPosition[0] -= that.speed * 2;
 		};
 
 		that.stepEast = function () {
+			if (that.hasBeenHit || that.isBeingEaten) return;
 			that.mapPosition[0] += that.speed * 2;
 		};
 
@@ -1993,7 +2105,9 @@ var Game = require('./lib/game');
 // Local variables for starting the game
 var mainCanvas = document.getElementById('skifree-canvas');
 var dContext = mainCanvas.getContext('2d');
-var imageSources = [ '/game/sprite-characters.png', '/game/skifree-objects.png' ];
+var backgroundImageSource = '/game/bg.png';
+var startHeaderImageSource = '/game/header.png';
+var imageSources = [ '/game/sprite-characters.png', '/game/skifree-objects.png', backgroundImageSource, startHeaderImageSource ];
 var global = this;
 var infoBoxControls = 'Use the mouse or WASDFT to control the rider.';
 if (isMobileDevice()) infoBoxControls = 'Tap / double tap on the screen to control the rider.';
@@ -2007,6 +2121,8 @@ var highScore = 0;
 var monsterActive = false;
 var loseLifeOnObstacleHit = false;
 var dropRates = {smallTree: 4, tallTree: 2, jump: 1, thickSnow: 1, rock: 1};
+var hudUpdateIntervalMs = 100;
+var lastHudUpdateAt = 0;
 if (localStorage.getItem('highScore')) highScore = localStorage.getItem('highScore');
 
 function loadImages (sources, next) {
@@ -2049,20 +2165,42 @@ function startNeverEndingGame (images) {
 	var infoBox;
 	var game;
 
+	function updateHud (force) {
+		var now = Date.now();
+		if (!force && now - lastHudUpdateAt < hudUpdateIntervalMs) return;
+
+		lastHudUpdateAt = now;
+		if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
+		infoBox.setLines([
+			'Bike Free',
+			infoBoxControls,
+			'Travelled ' + distanceTravelledInMetres + 'm',
+			'High Score: ' + highScore,
+			'Bikers left: ' + livesLeft
+		]);
+	}
+
 	function resetGame () {
 		distanceTravelledInMetres = 0;
-		if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
+		lastHudUpdateAt = 0;
 		livesLeft = 3;
 		highScore = localStorage.getItem('highScore');
 		game.reset();
 		game.addStaticObject(startSign);
 		if (window.BikeFreeScores) window.BikeFreeScores.reset();
+		updateHud(true);
 	}
 
 	function detectEnd () {
 		if (!game.isPaused()) {
 			if (window.BikeFreeScores) window.BikeFreeScores.submit(distanceTravelledInMetres);
-			highScore = localStorage.setItem('highScore', distanceTravelledInMetres);
+			var savedHighScore = Number(localStorage.getItem('highScore')) || 0;
+			if (Number(distanceTravelledInMetres) > savedHighScore) {
+				highScore = distanceTravelledInMetres;
+				localStorage.setItem('highScore', highScore);
+			} else {
+				highScore = savedHighScore;
+			}
 			infoBox.setLines([
 				'Game over!',
 				'Hit space to restart'
@@ -2116,6 +2254,10 @@ function startNeverEndingGame (images) {
 	}
 
 	game = new Game(mainCanvas, player);
+	game.setBackgroundImage(backgroundImageSource);
+	game.setStartHeaderImage(startHeaderImageSource);
+	document.addEventListener('bikefree:pause', game.pause);
+	document.addEventListener('bikefree:resume', game.resume);
 
 	startSign = new Sprite(sprites.signStart);
 	game.addStaticObject(startSign);
@@ -2148,7 +2290,7 @@ function startNeverEndingGame (images) {
 			], {
 				rateModifier: Math.max(800 - mainCanvas.width, 0),
 				position: function () {
-					return dContext.getRandomMapPositionBelowViewport();
+					return dContext.getRandomMapPositionInFrontOfSprite(player);
 				},
 				player: player
 			});
@@ -2158,21 +2300,11 @@ function startNeverEndingGame (images) {
 
 			randomlySpawnNPC(spawnBoarder, 0.1);
 			distanceTravelledInMetres = parseFloat(player.getPixelsTravelledDownMountain() / pixelsPerMetre).toFixed(1);
-			if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
+			updateHud(false);
 
 			if (distanceTravelledInMetres > monsterDistanceThreshold) {
 				randomlySpawnNPC(spawnMonster, 0.001);
 			}
-
-			infoBox.setLines([
-				'Bike Free',
-				infoBoxControls,
-				'Travelled ' + distanceTravelledInMetres + 'm',
-				'High Score: ' + highScore,
-				'Bikers left: ' + livesLeft/*,
-				'Skier Map Position: ' + player.mapPosition[0].toFixed(1) + ', ' + player.mapPosition[1].toFixed(1),
-				'Mouse Map Position: ' + mouseMapPosition[0].toFixed(1) + ', ' + mouseMapPosition[1].toFixed(1)*/
-			]);
 		}
 	});
 
@@ -2224,7 +2356,6 @@ function startNeverEndingGame (images) {
 	});
 	Mousetrap.bind('m', spawnMonster);
 	Mousetrap.bind('b', spawnBoarder);
-	Mousetrap.bind('space', resetGame);
 
 	var hammertime = Hammer(mainCanvas).on('press', function (e) {
 		e.preventDefault();

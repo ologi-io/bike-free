@@ -37,21 +37,11 @@ body {
   min-width: 0;
 }
 
-.brand-rider {
-  width: 81px;
-  height: 102px;
-  flex: 0 0 auto;
-  background: url('/game/sprite-characters.png') 0 -111px / 819px 1749px no-repeat;
-  image-rendering: pixelated;
-}
-
 .game-logo {
   display: block;
-  color: #70e000;
-  font-size: 46px;
-  line-height: 0.95;
-  letter-spacing: 0;
-  text-transform: uppercase;
+  width: min(360px, 34vw);
+  height: auto;
+  image-rendering: pixelated;
 }
 
 .score-chip {
@@ -75,8 +65,7 @@ body {
 }
 
 .game-header-actions,
-#game-account,
-.hud-country-form {
+#game-account {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -84,6 +73,14 @@ body {
 
 .game-header-actions {
   justify-content: flex-end;
+}
+
+#game-account:empty {
+  display: none;
+}
+
+.header-leaderboard-button {
+  text-transform: uppercase;
 }
 
 .game-frame {
@@ -112,7 +109,7 @@ body {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.58);
   font-family: "Courier New", Courier, monospace;
 }
 
@@ -121,20 +118,259 @@ body {
 }
 
 .score-modal-panel {
-  width: min(440px, calc(100vw - 40px));
-  padding: 24px;
+  position: relative;
+  box-sizing: border-box;
+  width: min(1220px, calc(100vw - 40px));
+  max-height: calc(100vh - 60px);
+  overflow: auto;
+  padding: 52px 52px 38px;
   border: 4px solid #f6f0d8;
+  border-radius: 12px;
   color: #f6f0d8;
   background: #151515;
   box-shadow: 8px 8px 0 #000;
-  text-align: center;
 }
 
 .score-modal-panel h2 {
-  margin: 4px 0 14px;
-  color: #70e000;
-  font-size: 32px;
+  margin: 8px 0 16px;
+  color: #ff4d6d;
+  font-size: 44px;
   line-height: 1;
+}
+
+.score-modal-panel h3 {
+  margin: 22px 0 10px;
+  color: #70e000;
+  font-size: 18px;
+}
+
+.score-modal-panel p {
+  line-height: 1.5;
+}
+
+.modal-close {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  padding: 10px 15px;
+  border: 2px solid #555;
+  border-radius: 6px;
+  color: #f6f0d8;
+  background: #1c1c1c;
+  box-shadow: none;
+}
+
+.modal-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 42px 44px 36px 44px;
+}
+
+.score-modal-backdrop[data-mode="score"] .modal-tabs {
+  display: none;
+}
+
+.modal-tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  color: #f6f0d8;
+  background: #1b1b1b;
+  border: 2px solid #555;
+  border-radius: 6px;
+  box-shadow: none;
+  text-transform: uppercase;
+}
+
+.modal-tabs button.active {
+  color: #151515;
+  background: #70e000;
+  border-color: #70e000;
+}
+
+.modal-tabs button.active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  left: 0;
+  height: 4px;
+  background: #70e000;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 480px;
+  gap: 36px;
+}
+
+.modal-preview {
+  display: grid;
+  gap: 28px;
+  align-content: start;
+  padding-left: 40px;
+  border-left: 2px solid #333;
+}
+
+.instructions-main {
+  min-width: 0;
+}
+
+.instructions-lede {
+  margin-bottom: 24px;
+  padding-bottom: 22px;
+  border-bottom: 2px solid #333;
+}
+
+.instruction-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.instruction-list li {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin: 14px 0;
+  line-height: 1.45;
+}
+
+.instruction-icon,
+.side-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #70e000;
+  font-weight: 700;
+}
+
+.instruction-icon {
+  text-align: center;
+}
+
+.bikefree-icon {
+  display: inline-block;
+  flex: 0 0 var(--icon-size, 24px);
+  width: var(--icon-size, 24px);
+  height: var(--icon-size, 24px);
+  background-image: url("/img/green_icons_sprite_sheet.png");
+  background-repeat: no-repeat;
+  background-size: 500% 200%;
+  image-rendering: pixelated;
+  vertical-align: -0.2em;
+}
+
+.svg-icon {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.2em;
+}
+
+.sprite-icon-book {
+  background-position: 0 0;
+}
+
+.sprite-icon-trophy {
+  background-position: 25% 0;
+}
+
+.sprite-icon-user {
+  background-position: 50% 0;
+}
+
+.sprite-icon-arrow {
+  background-position: 75% 0;
+}
+
+.sprite-icon-controls {
+  background-position: 100% 0;
+}
+
+.sprite-icon-lightning {
+  background-position: 0 100%;
+}
+
+.sprite-icon-bike {
+  background-position: 25% 100%;
+}
+
+.sprite-icon-tree {
+  background-position: 50% 100%;
+}
+
+.sprite-icon-bulb {
+  background-position: 100% 100%;
+}
+
+.tab-icon {
+  --icon-size: 22px;
+}
+
+.instruction-icon .bikefree-icon {
+  --icon-size: 38px;
+}
+
+.side-card-icon .bikefree-icon {
+  --icon-size: 38px;
+}
+
+.button-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.button-icon.bikefree-icon {
+  --icon-size: 24px;
+}
+
+.modal-tabs button:not(.active) .bikefree-icon {
+  background-image: url("/img/black_icons_sprite_sheet.png");
+  filter: invert(1);
+}
+
+.modal-tabs button.active .bikefree-icon,
+.score-modal-panel button.subtle .bikefree-icon,
+.modal-actions button:not(.subtle) .bikefree-icon {
+  background-image: url("/img/black_icons_sprite_sheet.png");
+}
+
+.modal-side-card {
+  padding: 28px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: #181818;
+}
+
+.modal-side-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 22px;
+  font-size: 18px;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.modal-side-card p {
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.modal-preview .modal-side-card:last-child {
+  padding-bottom: 32px;
 }
 
 .score-modal-distance {
@@ -146,7 +382,8 @@ body {
   color: #70e000;
 }
 
-.score-modal-actions {
+.score-modal-actions,
+.modal-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -154,25 +391,88 @@ body {
   margin-top: 18px;
 }
 
-.leaderboard-page {
-  min-height: 100vh;
+.modal-actions {
+  justify-content: flex-start;
+}
+
+.modal-note {
+  margin: 0;
+  color: #aaa;
+}
+
+.modal-leaderboard-table {
+  margin-top: 12px;
+  border: 2px solid #555;
+  font-size: 15px;
+}
+
+.modal-preview .modal-leaderboard-table {
+  margin-top: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-color: #5d5d5d;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.modal-leaderboard-table th,
+.modal-leaderboard-table td {
+  padding: 10px 12px;
+}
+
+.modal-preview .modal-leaderboard-table th {
+  padding: 16px 18px;
+  font-size: 18px;
+  text-transform: uppercase;
+  background: #202020;
+}
+
+.modal-preview .modal-leaderboard-table td {
+  padding: 18px;
+  font-size: 16px;
+}
+
+.modal-preview .modal-leaderboard-table th:first-child,
+.modal-preview .modal-leaderboard-table td:first-child {
+  width: 48px;
+}
+
+.modal-preview .modal-leaderboard-table th:nth-child(2),
+.modal-preview .modal-leaderboard-table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+.modal-preview .modal-leaderboard-table th:last-child,
+.modal-preview .modal-leaderboard-table td:last-child {
+  width: 136px;
+}
+
+.modal-preview .modal-leaderboard-table td:last-child {
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.modal-preview .modal-leaderboard-table .muted {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.modal-leaderboard-table tr:last-child td {
+  border-bottom: 0;
+}
+
+#view-leaderboard-button {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 24px;
   color: #f6f0d8;
-  background: #151515;
-  font-family: "Courier New", Courier, monospace;
-}
-
-.leaderboard-shell {
-  width: min(960px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 32px 0;
-}
-
-.leaderboard-header {
-  display: grid;
-  grid-template-columns: 96px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  margin-bottom: 20px;
+  background: #181818;
+  border: 2px solid #f6f0d8;
+  border-radius: 6px;
+  box-shadow: none;
+  font-size: 16px;
+  text-transform: uppercase;
 }
 
 .eyebrow {
@@ -188,12 +488,6 @@ h1 {
   font-size: 42px;
   line-height: 1;
   text-shadow: 3px 3px 0 #000;
-}
-
-.score-panel {
-  border: 4px solid #f6f0d8;
-  background: #252525;
-  box-shadow: 8px 8px 0 #000;
 }
 
 table {
@@ -229,7 +523,13 @@ button {
   cursor: pointer;
 }
 
-.play-link,
+.score-modal-panel button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 .button,
 .game-header-actions > a {
   display: inline-block;
@@ -246,13 +546,102 @@ button {
   align-items: center;
 }
 
-.country-form {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+.profile-tab-panel {
+  margin-top: 26px;
+  padding-top: 28px;
+  border-top: 1px dotted #444;
 }
 
-input {
+.profile-panel {
+  padding-bottom: 34px;
+  border-bottom: 1px dotted #444;
+}
+
+.profile-signed-in {
+  margin: 0 0 18px;
+  color: #f6f0d8;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.modal-profile-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 370px) minmax(220px, 320px) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.modal-profile-form input,
+.modal-profile-form select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 58px;
+  padding: 14px 16px;
+}
+
+.modal-profile-form select {
+  padding-right: 46px;
+}
+
+.modal-profile-form button {
+  min-width: 112px;
+  min-height: 58px;
+  text-transform: uppercase;
+}
+
+.profile-feedback {
+  grid-column: 1 / -1;
+  min-height: 24px;
+  margin: 0;
+  font-size: 16px;
+}
+
+.profile-feedback.success {
+  color: #70e000;
+}
+
+.profile-feedback.error {
+  color: #ff4d6d;
+}
+
+.profile-feedback.pending {
+  color: #f6f0d8;
+}
+
+.profile-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.profile-footer-actions form {
+  margin: 0;
+}
+
+.profile-footer-actions button,
+.profile-footer-actions .button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 250px;
+  min-height: 72px;
+  box-sizing: border-box;
+  text-transform: uppercase;
+}
+
+.profile-footer-actions form button {
+  background: #f6f0d8;
+}
+
+.profile-footer-actions.signed-out {
+  justify-content: flex-start;
+}
+
+input,
+select {
   width: 120px;
   padding: 9px;
   border: 2px solid #f6f0d8;
@@ -261,10 +650,13 @@ input {
   font: inherit;
 }
 
-.game-header input {
-  width: 120px;
-  padding: 12px;
-  border-width: 3px;
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 46px;
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='9' viewBox='0 0 14 9' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 2l5 5 5-5' fill='none' stroke='%23f6f0d8' stroke-width='2.5' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
 }
 
 .muted {
@@ -282,15 +674,8 @@ input {
     width: 100%;
   }
 
-  .brand-rider {
-    width: 54px;
-    height: 68px;
-    background-position: 0 -74px;
-    background-size: 546px 1166px;
-  }
-
   .game-logo {
-    font-size: 30px;
+    width: min(280px, calc(100vw - 92px));
   }
 
   .score-chip {
@@ -301,8 +686,6 @@ input {
 
   #account,
   #game-account,
-  .country-form,
-  .hud-country-form,
   .game-header-actions {
     align-items: flex-start;
     flex-wrap: wrap;
@@ -310,6 +693,69 @@ input {
 
   h1 {
     font-size: 34px;
+  }
+
+  .score-modal-panel {
+    width: calc(100vw - 32px);
+    padding: 54px 16px 22px;
+  }
+
+  .modal-tabs {
+    grid-template-columns: 1fr;
+    margin: 0 28px 18px;
+  }
+
+  .modal-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .modal-preview {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 2px dotted #555;
+  }
+
+  .modal-side-card {
+    padding: 22px;
+  }
+
+  .modal-side-card h3 {
+    font-size: 18px;
+  }
+
+  .modal-preview .modal-leaderboard-table th,
+  .modal-preview .modal-leaderboard-table td {
+    padding: 14px 10px;
+    font-size: 16px;
+  }
+
+  .modal-preview .modal-leaderboard-table td:last-child {
+    font-size: 16px;
+  }
+
+  #view-leaderboard-button {
+    min-height: 60px;
+    font-size: 16px;
+  }
+
+  .instruction-list li {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .modal-profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-footer-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-footer-actions button,
+  .profile-footer-actions .button {
+    width: 100%;
+    min-width: 0;
   }
 
   th,

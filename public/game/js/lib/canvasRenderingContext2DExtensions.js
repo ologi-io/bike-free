@@ -83,6 +83,37 @@ CanvasRenderingContext2D.prototype.getRandomMapPositionBelowViewport = function 
 	return this.canvasPositionToMapPosition([ xCanvas, yCanvas ]);
 };
 
+CanvasRenderingContext2D.prototype.getRandomMapPositionInFrontOfSprite = function (sprite) {
+	var centre = this.getCentralPosition().canvas;
+	var dx = 0;
+	var dy = 1;
+
+	if (typeof sprite.direction !== 'undefined') {
+		var radians = (sprite.direction - 90) * (Math.PI / 180);
+		dx = Math.cos(radians);
+		dy = Math.sin(radians);
+	} else if (sprite.movingToward) {
+		dx = sprite.movingToward[0] - sprite.mapPosition[0];
+		dy = sprite.movingToward[1] - sprite.mapPosition[1];
+	}
+
+	var length = Math.sqrt(dx * dx + dy * dy) || 1;
+	dx = dx / length;
+	dy = dy / length;
+
+	var buffer = 100;
+	var halfWidth = this.canvas.width / 2;
+	var halfHeight = this.canvas.height / 2;
+	var xDistance = dx === 0 ? Infinity : (halfWidth + buffer) / Math.abs(dx);
+	var yDistance = dy === 0 ? Infinity : (halfHeight + buffer) / Math.abs(dy);
+	var forwardDistance = Math.min(xDistance, yDistance);
+	var lateralDistance = Number.random(-Math.max(halfWidth, halfHeight), Math.max(halfWidth, halfHeight));
+	var xCanvas = centre[0] + (dx * forwardDistance) - (dy * lateralDistance);
+	var yCanvas = centre[1] + (dy * forwardDistance) + (dx * lateralDistance);
+
+	return this.canvasPositionToMapPosition([ xCanvas, yCanvas ]);
+};
+
 CanvasRenderingContext2D.prototype.getRandomMapPositionAboveViewport = function () {
 	var xCanvas = this.getRandomlyInTheCentreOfCanvas();
 	var yCanvas = this.getAboveViewport();

@@ -21,6 +21,11 @@ const publicPath = path.join(__dirname, 'public');
 
 let db;
 const rateBuckets = new Map();
+const countryCodes = new Set('AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'.split(' '));
+const blockedUsernameTerms = [
+  'asshole', 'bastard', 'bitch', 'crap', 'cunt', 'damn', 'dick', 'faggot',
+  'fuck', 'nigger', 'piss', 'retard', 'shit', 'slut', 'whore'
+];
 
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
@@ -134,6 +139,41 @@ function rateLimit(name, limit, windowMs) {
   };
 }
 
+function normalizeCountry(value) {
+  const country = String(value || '').trim().toUpperCase();
+  const legacy = { USA: 'US', UNITEDSTATES: 'US', UK: 'GB', ENGLAND: 'GB' };
+  const normalized = legacy[country.replace(/[^A-Z]/g, '')] || country;
+  return countryCodes.has(normalized) ? normalized : '';
+}
+
+function cleanUsername(value) {
+  return String(value || '').trim().replace(/\s+/g, '_');
+}
+
+function hasBlockedUsernameTerm(username) {
+  const normalized = username.toLowerCase()
+    .replace(/[@4]/g, 'a')
+    .replace(/[!1|]/g, 'i')
+    .replace(/3/g, 'e')
+    .replace(/0/g, 'o')
+    .replace(/[5$]/g, 's')
+    .replace(/7/g, 't')
+    .replace(/[^a-z0-9]/g, '');
+  return blockedUsernameTerms.some((term) => normalized.includes(term));
+}
+
+function validateUsername(value) {
+  const username = cleanUsername(value);
+  if (!username) return { username: '', usernameLower: '' };
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+    return { error: 'Usernames must be 3-20 letters, numbers, or underscores.' };
+  }
+  if (hasBlockedUsernameTerm(username)) {
+    return { error: 'Choose a different username.' };
+  }
+  return { username, usernameLower: username.toLowerCase() };
+}
+
 app.get('/auth/google', authConfigured, (req, res, next) => {
   const returnTo = String(req.query.returnTo || '');
   if (returnTo.startsWith('/') && !returnTo.startsWith('//')) req.session.returnTo = returnTo;
@@ -144,9 +184,9 @@ app.get('/auth/google', authConfigured, (req, res, next) => {
 }));
 
 app.get('/auth/google/callback', authConfigured, passport.authenticate('google', {
-  failureRedirect: '/leaderboard?auth=failed',
+  failureRedirect: '/?tab=profile',
 }), (req, res) => {
-  const returnTo = req.session.returnTo || '/leaderboard';
+  const returnTo = req.session.returnTo || '/?tab=profile';
   delete req.session.returnTo;
   res.redirect(returnTo);
 });
@@ -154,7 +194,7 @@ app.get('/auth/google/callback', authConfigured, passport.authenticate('google',
 app.post('/logout', (req, res, next) => {
   req.logout((error) => {
     if (error) return next(error);
-    res.redirect('/leaderboard');
+    res.redirect('/?tab=profile');
   });
 });
 
@@ -164,7 +204,8 @@ app.get('/api/me', (req, res) => {
     user: {
       id: String(req.user._id),
       displayName: req.user.displayName,
-      country: req.user.country || '',
+      username: req.user.username || '',
+      country: normalizeCountry(req.user.country),
       bestDistance: req.user.bestDistance || 0,
       avatarUrl: req.user.avatarUrl || '',
     },
@@ -173,13 +214,31 @@ app.get('/api/me', (req, res) => {
 });
 
 app.patch('/api/me', requireUser, async (req, res) => {
-  const country = String(req.body.country || '').trim().slice(0, 56);
+  const country = normalizeCountry(req.body.country);
+  const usernameResult = validateUsername(req.body.username);
+  if (usernameResult.error) return res.status(400).json({ error: usernameResult.error });
+  if (usernameResult.usernameLower) {
+    const existing = await db.collection('bikefree_users').findOne({
+      usernameLower: usernameResult.usernameLower,
+      _id: { $ne: req.user._id },
+    });
+    if (existing) return res.status(409).json({ error: 'That username is already taken.' });
+  }
   await db.collection('bikefree_users').updateOne(
     { _id: req.user._id },
-    { $set: { country, updatedAt: new Date() } }
+    {
+      $set: {
+        username: usernameResult.username,
+        usernameLower: usernameResult.usernameLower,
+        country,
+        updatedAt: new Date(),
+      }
+    }
   );
+  req.user.username = usernameResult.username;
+  req.user.usernameLower = usernameResult.usernameLower;
   req.user.country = country;
-  res.json({ ok: true, country });
+  res.json({ ok: true, username: usernameResult.username, country });
 });
 
 app.post('/api/runs', rateLimit('runs', 30, 60 * 1000), async (req, res) => {
@@ -242,7 +301,7 @@ app.get('/api/leaderboard', async (req, res) => {
   const limit = Math.min(Number(req.query.limit || 50), 100);
   const scores = await db.collection('bikefree_users')
     .find({ bestDistance: { $gt: 0 } })
-    .project({ displayName: 1, country: 1, bestDistance: 1, bestScoreAt: 1, avatarUrl: 1 })
+    .project({ displayName: 1, username: 1, country: 1, bestDistance: 1, bestScoreAt: 1, avatarUrl: 1 })
     .sort({ bestDistance: -1, bestScoreAt: 1 })
     .limit(limit)
     .toArray();
@@ -250,17 +309,13 @@ app.get('/api/leaderboard', async (req, res) => {
   res.json({
     scores: scores.map((score, index) => ({
       rank: index + 1,
-      name: score.displayName || 'Rider',
-      country: score.country || '',
+      name: score.username || score.displayName || 'Rider',
+      country: normalizeCountry(score.country),
       distance: score.bestDistance || 0,
       bestScoreAt: score.bestScoreAt || null,
       avatarUrl: score.avatarUrl || '',
     })),
   });
-});
-
-app.get('/leaderboard', (req, res) => {
-  res.sendFile(path.join(publicPath, 'leaderboard.html'));
 });
 
 app.use(express.static(publicPath, {
@@ -278,6 +333,10 @@ async function start() {
     db = client.db(process.env.MONGO_DB_NAME || undefined);
     await db.collection('bikefree_scores').createIndex({ userId: 1, distance: -1 });
     await db.collection('bikefree_users').createIndex({ bestDistance: -1 });
+    await db.collection('bikefree_users').createIndex({ usernameLower: 1 }, {
+      unique: true,
+      partialFilterExpression: { usernameLower: { $type: 'string', $gt: '' } },
+    });
     await db.collection('bikefree_runs').createIndex({ startedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 });
   }
 

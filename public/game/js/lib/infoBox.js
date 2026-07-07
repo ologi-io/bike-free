@@ -1,5 +1,8 @@
 function InfoBox(data) {
 	var that = this;
+	var layout = [];
+	var layoutKey = '';
+	var layoutCanvasWidth = 0;
 
 	that.lines = data.initialLines;
 
@@ -12,12 +15,23 @@ function InfoBox(data) {
 	that.height = data.height;
 
 	that.setLines = function (lines) {
+		var same = lines.length === that.lines.length;
+		for (var i = 0; same && i < lines.length; i += 1) {
+			same = lines[i] === that.lines[i];
+		}
+		if (same) return;
+
 		that.lines = lines;
+		layoutKey = '';
 	};
 
-	that.draw = function (dContext) {
+	function getLayout (dContext) {
 		dContext.font = '11px monospace';
+		var key = that.lines.join('\n');
+		if (layoutKey === key && layoutCanvasWidth === dContext.canvas.width) return layout;
+
 		var yOffset = 0;
+		layout = [];
 		that.lines.each(function (line) {
 			var fontSize = +dContext.font.slice(0,2);
 			var textWidth = dContext.measureText(line).width;
@@ -37,8 +51,16 @@ function InfoBox(data) {
 
 			yOffset += textHeight;
 
+			layout.push({ line: line, x: xPos, y: yPos });
+		});
+		layoutKey = key;
+		layoutCanvasWidth = dContext.canvas.width;
+		return layout;
+	}
 
-			dContext.fillText(line, xPos, yPos);
+	that.draw = function (dContext) {
+		getLayout(dContext).each(function (item) {
+			dContext.fillText(item.line, item.x, item.y);
 		});
 	};
 

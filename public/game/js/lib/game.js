@@ -14,6 +14,8 @@ var EventedLoop = require('eventedloop');
 		var beforeCycleCallbacks = [];
 		var afterCycleCallbacks = [];
 		var gameLoop = new EventedLoop();
+		var backgroundImageKey = null;
+		var startHeaderImageKey = null;
 
 		this.addStaticObject = function (sprite) {
 			staticObjects.push(sprite);
@@ -37,6 +39,14 @@ var EventedLoop = require('eventedloop');
 
 		this.addUIElement = function (element) {
 			uiElements.push(element);
+		};
+
+		this.setBackgroundImage = function (imageKey) {
+			backgroundImageKey = imageKey;
+		};
+
+		this.setStartHeaderImage = function (imageKey) {
+			startHeaderImageKey = imageKey;
 		};
 
 		this.beforeCycle = function (callback) {
@@ -99,9 +109,48 @@ var EventedLoop = require('eventedloop');
 			});
 		};
 
+		function drawBackground () {
+			var image = backgroundImageKey && dContext.getLoadedImage(backgroundImageKey);
+			if (!image) return;
+
+			var origin = dContext.mapPositionToCanvasPosition([0, 0]);
+			var tileWidth = image.naturalWidth || image.width;
+			var tileHeight = image.naturalHeight || image.height;
+			var startX = origin[0] % tileWidth;
+			var startY = origin[1] % tileHeight;
+			if (startX > 0) startX -= tileWidth;
+			if (startY > 0) startY -= tileHeight;
+
+			for (var x = startX; x < mainCanvas.width; x += tileWidth) {
+				for (var y = startY; y < mainCanvas.height; y += tileHeight) {
+					dContext.drawImage(image, Math.round(x), Math.round(y));
+				}
+			}
+		}
+
+		function drawStartHeader () {
+			var image = startHeaderImageKey && dContext.getLoadedImage(startHeaderImageKey);
+			if (!image) return;
+
+			var width = image.naturalWidth || image.width;
+			var topLeft = dContext.mapPositionToCanvasPosition([
+				0 - (width / 2),
+				0 - (mainCanvas.height / 2)
+			]);
+			var startX = topLeft[0] % width;
+			if (startX > 0) startX -= width;
+
+			for (var x = startX; x < mainCanvas.width; x += width) {
+				dContext.drawImage(image, Math.round(x), Math.round(topLeft[1]));
+			}
+		}
+
 		that.draw = function () {
 			// Clear canvas
 			mainCanvas.width = mainCanvas.width;
+			dContext.imageSmoothingEnabled = false;
+			drawBackground();
+			drawStartHeader();
 			
 			// so the rider is always in front of the bushes.
 			staticObjects.each(function (staticObject, i) {
@@ -139,6 +188,12 @@ var EventedLoop = require('eventedloop');
 		this.pause = function () {
 			paused = true;
 			gameLoop.stop();
+		};
+
+		this.resume = function () {
+			if (!paused) return;
+			paused = false;
+			gameLoop.start();
 		};
 
 		this.isPaused = function () {

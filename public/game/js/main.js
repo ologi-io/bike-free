@@ -22,7 +22,9 @@ var Game = require('./lib/game');
 // Local variables for starting the game
 var mainCanvas = document.getElementById('skifree-canvas');
 var dContext = mainCanvas.getContext('2d');
-var imageSources = [ '/game/sprite-characters.png', '/game/skifree-objects.png' ];
+var backgroundImageSource = '/game/bg.png';
+var startHeaderImageSource = '/game/header.png';
+var imageSources = [ '/game/sprite-characters.png', '/game/skifree-objects.png', backgroundImageSource, startHeaderImageSource ];
 var global = this;
 var infoBoxControls = 'Use the mouse or WASDFT to control the rider.';
 if (isMobileDevice()) infoBoxControls = 'Tap / double tap on the screen to control the rider.';
@@ -36,6 +38,8 @@ var highScore = 0;
 var monsterActive = false;
 var loseLifeOnObstacleHit = false;
 var dropRates = {smallTree: 4, tallTree: 2, jump: 1, thickSnow: 1, rock: 1};
+var hudUpdateIntervalMs = 100;
+var lastHudUpdateAt = 0;
 if (localStorage.getItem('highScore')) highScore = localStorage.getItem('highScore');
 
 function loadImages (sources, next) {
@@ -78,20 +82,42 @@ function startNeverEndingGame (images) {
 	var infoBox;
 	var game;
 
+	function updateHud (force) {
+		var now = Date.now();
+		if (!force && now - lastHudUpdateAt < hudUpdateIntervalMs) return;
+
+		lastHudUpdateAt = now;
+		if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
+		infoBox.setLines([
+			'Bike Free',
+			infoBoxControls,
+			'Travelled ' + distanceTravelledInMetres + 'm',
+			'High Score: ' + highScore,
+			'Bikers left: ' + livesLeft
+		]);
+	}
+
 	function resetGame () {
 		distanceTravelledInMetres = 0;
-		if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
+		lastHudUpdateAt = 0;
 		livesLeft = 3;
 		highScore = localStorage.getItem('highScore');
 		game.reset();
 		game.addStaticObject(startSign);
 		if (window.BikeFreeScores) window.BikeFreeScores.reset();
+		updateHud(true);
 	}
 
 	function detectEnd () {
 		if (!game.isPaused()) {
 			if (window.BikeFreeScores) window.BikeFreeScores.submit(distanceTravelledInMetres);
-			highScore = localStorage.setItem('highScore', distanceTravelledInMetres);
+			var savedHighScore = Number(localStorage.getItem('highScore')) || 0;
+			if (Number(distanceTravelledInMetres) > savedHighScore) {
+				highScore = distanceTravelledInMetres;
+				localStorage.setItem('highScore', highScore);
+			} else {
+				highScore = savedHighScore;
+			}
 			infoBox.setLines([
 				'Game over!',
 				'Hit space to restart'
@@ -145,6 +171,10 @@ function startNeverEndingGame (images) {
 	}
 
 	game = new Game(mainCanvas, player);
+	game.setBackgroundImage(backgroundImageSource);
+	game.setStartHeaderImage(startHeaderImageSource);
+	document.addEventListener('bikefree:pause', game.pause);
+	document.addEventListener('bikefree:resume', game.resume);
 
 	startSign = new Sprite(sprites.signStart);
 	game.addStaticObject(startSign);
@@ -177,7 +207,7 @@ function startNeverEndingGame (images) {
 			], {
 				rateModifier: Math.max(800 - mainCanvas.width, 0),
 				position: function () {
-					return dContext.getRandomMapPositionBelowViewport();
+					return dContext.getRandomMapPositionInFrontOfSprite(player);
 				},
 				player: player
 			});
@@ -187,21 +217,11 @@ function startNeverEndingGame (images) {
 
 			randomlySpawnNPC(spawnBoarder, 0.1);
 			distanceTravelledInMetres = parseFloat(player.getPixelsTravelledDownMountain() / pixelsPerMetre).toFixed(1);
-			if (window.BikeFreeScores) window.BikeFreeScores.updateDistance(distanceTravelledInMetres);
+			updateHud(false);
 
 			if (distanceTravelledInMetres > monsterDistanceThreshold) {
 				randomlySpawnNPC(spawnMonster, 0.001);
 			}
-
-			infoBox.setLines([
-				'Bike Free',
-				infoBoxControls,
-				'Travelled ' + distanceTravelledInMetres + 'm',
-				'High Score: ' + highScore,
-				'Bikers left: ' + livesLeft/*,
-				'Skier Map Position: ' + player.mapPosition[0].toFixed(1) + ', ' + player.mapPosition[1].toFixed(1),
-				'Mouse Map Position: ' + mouseMapPosition[0].toFixed(1) + ', ' + mouseMapPosition[1].toFixed(1)*/
-			]);
 		}
 	});
 
@@ -253,7 +273,6 @@ function startNeverEndingGame (images) {
 	});
 	Mousetrap.bind('m', spawnMonster);
 	Mousetrap.bind('b', spawnBoarder);
-	Mousetrap.bind('space', resetGame);
 
 	var hammertime = Hammer(mainCanvas).on('press', function (e) {
 		e.preventDefault();

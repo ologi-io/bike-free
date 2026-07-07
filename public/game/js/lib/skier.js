@@ -145,6 +145,8 @@ if (typeof navigator !== 'undefined') {
 		}
 
 		function setDiscreteDirection(d) {
+			if (that.hasBeenHit || that.isBeingEaten) return;
+
 			if (discreteDirections[d]) {
 				that.setDirection(discreteDirections[d]);
 			}
@@ -239,10 +241,12 @@ if (typeof navigator !== 'undefined') {
 		};
 
 		that.stepWest = function () {
+			if (that.hasBeenHit || that.isBeingEaten) return;
 			that.mapPosition[0] -= that.speed * 2;
 		};
 
 		that.stepEast = function () {
+			if (that.hasBeenHit || that.isBeingEaten) return;
 			that.mapPosition[0] += that.speed * 2;
 		};
 
