@@ -55,6 +55,7 @@ The local Node version is pinned with `.nvmrc`.
 nvm use
 npm install
 npm run dev
+```
 
 ## Credits
 
