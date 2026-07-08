@@ -6756,12 +6756,12 @@ if (typeof module !== 'undefined') {
 		};
 
 		this.setCanvasPosition = function (cx, cy) {
-			if (cx) {
+			if (typeof cx !== 'undefined') {
 				if (Object.isString(cx) && (cx.first() === '+' || cx.first() === '-')) incrementX(cx);
 				else that.canvasX = cx;
 			}
 			
-			if (cy) {
+			if (typeof cy !== 'undefined') {
 				if (Object.isString(cy) && (cy.first() === '+' || cy.first() === '-')) incrementY(cy);
 				else that.canvasY = cy;
 			}
@@ -7035,6 +7035,7 @@ if (typeof module !== 'undefined') {
 if (typeof module !== 'undefined') {
 	module.exports = this.sprite;
 }
+
 },{"./guid":9}],17:[function(require,module,exports){
 (function (global) {
 	function SpriteArray() {

@@ -118,12 +118,12 @@
 		};
 
 		this.setCanvasPosition = function (cx, cy) {
-			if (cx) {
+			if (typeof cx !== 'undefined') {
 				if (Object.isString(cx) && (cx.first() === '+' || cx.first() === '-')) incrementX(cx);
 				else that.canvasX = cx;
 			}
 			
-			if (cy) {
+			if (typeof cy !== 'undefined') {
 				if (Object.isString(cy) && (cy.first() === '+' || cy.first() === '-')) incrementY(cy);
 				else that.canvasY = cy;
 			}
