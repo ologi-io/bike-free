@@ -49,6 +49,7 @@ body {
   gap: 18px;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
   min-width: 320px;
   padding: 13px 20px;
   border: 3px solid #333;
@@ -56,6 +57,10 @@ body {
   color: #f6f0d8;
   background: #080808;
   box-shadow: inset 0 0 0 2px #1d1d1d, 4px 4px 0 #000;
+}
+
+.score-chip span {
+  white-space: nowrap;
 }
 
 .score-chip span:first-child,
@@ -81,6 +86,23 @@ body {
 
 .header-leaderboard-button {
   text-transform: uppercase;
+}
+
+@media (min-width: 901px) and (max-width: 1300px) {
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) auto minmax(96px, 1fr);
+    gap: 12px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .game-logo {
+    width: min(250px, 28vw);
+  }
+
+  .score-chip {
+    min-width: max-content;
+  }
 }
 
 .game-frame {
@@ -146,18 +168,6 @@ body {
 
 .score-modal-panel p {
   line-height: 1.5;
-}
-
-.modal-close {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  padding: 10px 15px;
-  border: 2px solid #555;
-  border-radius: 6px;
-  color: #f6f0d8;
-  background: #1c1c1c;
-  box-shadow: none;
 }
 
 .modal-tabs {
@@ -665,20 +675,22 @@ select {
 
 @media (max-width: 900px) {
   .game-header {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
     padding: 12px;
   }
 
   .game-brand {
+    grid-column: 1;
     width: 100%;
   }
 
   .game-logo {
-    width: min(280px, calc(100vw - 92px));
+    width: min(195px, calc(100vw - 144px));
   }
 
   .score-chip {
+    grid-column: 1 / -1;
     justify-content: flex-start;
     min-width: 0;
     width: calc(100% - 40px);
@@ -687,22 +699,63 @@ select {
   #account,
   #game-account,
   .game-header-actions {
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .game-header-actions {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
   }
 
   h1 {
     font-size: 34px;
   }
 
+  .score-modal-backdrop {
+    align-items: flex-start;
+    place-items: start center;
+    padding: 150px 10px 12px;
+    overflow-y: auto;
+  }
+
   .score-modal-panel {
-    width: calc(100vw - 32px);
-    padding: 54px 16px 22px;
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 164px);
+    padding: 22px 16px 22px;
+    overflow-y: auto;
+    font-size: 13px;
   }
 
   .modal-tabs {
-    grid-template-columns: 1fr;
-    margin: 0 28px 18px;
+    gap: 0;
+    margin: 0 0 20px;
+    border: 2px solid #555;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .modal-tabs button {
+    min-height: 44px;
+    padding: 10px 6px;
+    border-width: 0 1px 0 0;
+    border-radius: 0;
+    font-size: 13px;
+    gap: 0;
+  }
+
+  .modal-tabs .tab-icon {
+    display: none;
+  }
+
+  .modal-tabs button:last-child {
+    border-right: 0;
+  }
+
+  .modal-tabs button.active::after {
+    bottom: 0;
+    height: 3px;
   }
 
   .modal-grid {
@@ -711,9 +764,12 @@ select {
   }
 
   .modal-preview {
-    padding-left: 0;
-    border-left: 0;
-    border-top: 2px dotted #555;
+    display: none;
+  }
+
+  .score-modal-panel h2 {
+    font-size: clamp(26px, 8vw, 32px);
+    line-height: 1.08;
   }
 
   .modal-side-card {

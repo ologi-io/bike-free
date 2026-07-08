@@ -92,9 +92,9 @@ if (typeof navigator !== 'undefined') {
 		}
 
 		function setJumping() {
-			var currentSpeed = that.getSpeed();
-			that.setSpeed(currentSpeed + 2);
-			that.setSpeedY(currentSpeed + 2);
+			var jumpSpeed = standardSpeed + 2;
+			that.setSpeed(jumpSpeed);
+			that.setSpeedY(jumpSpeed);
 			that.isMoving = true;
 			that.hasBeenHit = false;
 			that.isJumping = true;
@@ -337,12 +337,11 @@ if (typeof navigator !== 'undefined') {
 		};
 
 		that.speedBoost = function () {
-			var originalSpeed = that.speed;
 			if (canSpeedBoost) {
 				canSpeedBoost = false;
-				that.setSpeed(that.speed * boostMultiplier);
+				that.setSpeed(standardSpeed * boostMultiplier);
 				setTimeout(function () {
-					that.setSpeed(originalSpeed);
+					that.resetSpeed();
 					setTimeout(function () {
 						canSpeedBoost = true;
 					}, 10000);

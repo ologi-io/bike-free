@@ -11,7 +11,6 @@
   var instructionsTab = document.getElementById('instructions-tab');
   var leaderboardTab = document.getElementById('leaderboard-tab');
   var profileTab = document.getElementById('profile-tab');
-  var closeButton = document.getElementById('score-modal-close');
   var headerLeaderboardButton = document.getElementById('header-leaderboard-button');
   var resumeOnModalClose = false;
   var lastTravelledText = '';
@@ -477,7 +476,6 @@
   };
 
   setTabLabels();
-  if (closeButton) closeButton.addEventListener('click', closeModal);
   if (instructionsTab) instructionsTab.addEventListener('click', renderInstructions);
   if (leaderboardTab) leaderboardTab.addEventListener('click', renderLeaderboard);
   if (profileTab) profileTab.addEventListener('click', renderProfile);

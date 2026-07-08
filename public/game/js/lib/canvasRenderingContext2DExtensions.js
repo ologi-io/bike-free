@@ -104,9 +104,7 @@ CanvasRenderingContext2D.prototype.getRandomMapPositionInFrontOfSprite = functio
 	var buffer = 100;
 	var halfWidth = this.canvas.width / 2;
 	var halfHeight = this.canvas.height / 2;
-	var xDistance = dx === 0 ? Infinity : (halfWidth + buffer) / Math.abs(dx);
-	var yDistance = dy === 0 ? Infinity : (halfHeight + buffer) / Math.abs(dy);
-	var forwardDistance = Math.min(xDistance, yDistance);
+	var forwardDistance = (halfWidth * Math.abs(dx)) + (halfHeight * Math.abs(dy)) + buffer;
 	var lateralDistance = Number.random(-Math.max(halfWidth, halfHeight), Math.max(halfWidth, halfHeight));
 	var xCanvas = centre[0] + (dx * forwardDistance) - (dy * lateralDistance);
 	var yCanvas = centre[1] + (dy * forwardDistance) + (dx * lateralDistance);

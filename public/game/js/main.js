@@ -41,9 +41,28 @@ var highScore = 0;
 var monsterActive = false;
 var loseLifeOnObstacleHit = false;
 var dropRates = {smallTree: 4, tallTree: 2, jump: 1, thickSnow: 1, rock: 1};
+var difficultyIntervalMs = 30000;
+var difficultyIncreaseRate = 0.2;
+var maxDifficultyMultiplier = 6;
+var densityBaselineWidth = 1500;
+var gameTickMs = 20;
+var activeRideTimeMs = 0;
 var hudUpdateIntervalMs = 100;
 var lastHudUpdateAt = 0;
 if (localStorage.getItem('highScore')) highScore = localStorage.getItem('highScore');
+
+function getDifficultyMultiplier() {
+	var steps = Math.floor(activeRideTimeMs / difficultyIntervalMs);
+	return Math.min(Math.pow(1 + difficultyIncreaseRate, steps), maxDifficultyMultiplier);
+}
+
+function getObstacleDropRate(obstacleName) {
+	return dropRates[obstacleName] * getDifficultyMultiplier() * getViewportDensityMultiplier();
+}
+
+function getViewportDensityMultiplier() {
+	return mainCanvas.width / densityBaselineWidth;
+}
 
 function loadImages (sources, next) {
 	var loaded = 0;
@@ -102,6 +121,7 @@ function startNeverEndingGame (images) {
 
 	function resetGame () {
 		distanceTravelledInMetres = 0;
+		activeRideTimeMs = 0;
 		lastHudUpdateAt = 0;
 		livesLeft = 3;
 		highScore = localStorage.getItem('highScore');
@@ -137,10 +157,17 @@ function startNeverEndingGame (images) {
 		}
 	}
 
+	function getRandomMonsterSpawnPosition() {
+		var sideBuffer = 80;
+		var xCanvas = Math.random() < 0.5 ? -sideBuffer : mainCanvas.width + sideBuffer;
+		var yCanvas = mainCanvas.height * (0.35 + (Math.random() * 0.15));
+		return dContext.canvasPositionToMapPosition([xCanvas, yCanvas]);
+	}
+
 	function spawnMonster () { // set flag so only one monster at a time?
 		if(!monsterActive){
 			var newMonster = new Monster(sprites.monster);
-			var randomPosition = dContext.getRandomMapPositionAboveViewport();
+			var randomPosition = getRandomMonsterSpawnPosition();
 			monsterActive = true;
 			newMonster.setMapPosition(randomPosition[0], randomPosition[1]);
 			newMonster.follow(player);
@@ -201,14 +228,15 @@ function startNeverEndingGame (images) {
 	game.beforeCycle(function () {
 		var newObjects = [];
 		if (player.isMoving) {
+			if (!game.isPaused()) activeRideTimeMs += gameTickMs;
 			newObjects = Sprite.createObjects([
-				{ sprite: sprites.smallTree, dropRate: dropRates.smallTree },
-				{ sprite: sprites.tallTree, dropRate: dropRates.tallTree },
+				{ sprite: sprites.smallTree, dropRate: getObstacleDropRate('smallTree') },
+				{ sprite: sprites.tallTree, dropRate: getObstacleDropRate('tallTree') },
 				{ sprite: sprites.jump, dropRate: dropRates.jump },
-				{ sprite: sprites.thickSnow, dropRate: dropRates.thickSnow },
-				{ sprite: sprites.rock, dropRate: dropRates.rock },
+				{ sprite: sprites.thickSnow, dropRate: getObstacleDropRate('thickSnow') },
+				{ sprite: sprites.rock, dropRate: getObstacleDropRate('rock') },
 			], {
-				rateModifier: Math.max(800 - mainCanvas.width, 0),
+				rateModifier: 0,
 				position: function () {
 					return dContext.getRandomMapPositionInFrontOfSprite(player);
 				},
@@ -277,19 +305,25 @@ function startNeverEndingGame (images) {
 	Mousetrap.bind('m', spawnMonster);
 	Mousetrap.bind('b', spawnBoarder);
 
+	function setTouchTarget(e) {
+		var center = (e.gesture && e.gesture.center) || e.center;
+		if (!center) return false;
+		game.setMouseX(center.x);
+		game.setMouseY(center.y);
+		return true;
+	}
+
 	var hammertime = Hammer(mainCanvas).on('press', function (e) {
 		e.preventDefault();
-		game.setMouseX(e.gesture.center.x);
-		game.setMouseY(e.gesture.center.y);
+		setTouchTarget(e);
 	}).on('tap', function (e) {
 		player.attemptTrick();
-		game.setMouseX(e.gesture.center.x);
-		game.setMouseY(e.gesture.center.y);
+		setTouchTarget(e);
 	}).on('pan', function (e) {
-		game.setMouseX(e.gesture.center.x);
-		game.setMouseY(e.gesture.center.y);
-		player.resetDirection();
-		player.startMovingIfPossible();
+		if (setTouchTarget(e)) {
+			player.resetDirection();
+			player.startMovingIfPossible();
+		}
 	}).on('doubletap', function (e) {
 		player.speedBoost();
 	});
