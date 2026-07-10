@@ -16,6 +16,7 @@ var EventedLoop = require('eventedloop');
 		var gameLoop = new EventedLoop();
 		var backgroundImageKey = null;
 		var startHeaderImageKey = null;
+		var staticCullPadding = 300;
 
 		this.addStaticObject = function (sprite) {
 			staticObjects.push(sprite);
@@ -71,6 +72,44 @@ var EventedLoop = require('eventedloop');
 
 		var intervalNum = 0;
 
+		function getPlayerForwardVector () {
+			var dx = 0;
+			var dy = 1;
+
+			if (typeof player.direction !== 'undefined') {
+				var radians = (player.direction - 90) * (Math.PI / 180);
+				dx = Math.cos(radians);
+				dy = Math.sin(radians);
+			} else if (player.movingToward) {
+				dx = player.movingToward[0] - player.mapPosition[0];
+				dy = player.movingToward[1] - player.mapPosition[1];
+			}
+
+			var length = Math.sqrt((dx * dx) + (dy * dy)) || 1;
+			return [ dx / length, dy / length ];
+		}
+
+		function cullStaticObjectsBehindPlayer () {
+			var forward = getPlayerForwardVector();
+			var cullDistance = Math.max(mainCanvas.width, mainCanvas.height) + staticCullPadding;
+
+			staticObjects.each(function (staticObject) {
+				if (!staticObject || !staticObject.mapPosition) return;
+
+				var dx = staticObject.mapPosition[0] - player.mapPosition[0];
+				var dy = staticObject.mapPosition[1] - player.mapPosition[1];
+				var behindDistance = -((dx * forward[0]) + (dy * forward[1]));
+
+				if (behindDistance > cullDistance) {
+					if (staticObject.deleteOnNextCycle) {
+						staticObject.deleteOnNextCycle();
+					} else {
+						staticObject.deleted = true;
+					}
+				}
+			});
+		}
+
 		this.cycle = function () {
 			beforeCycleCallbacks.each(function(c) {
 				c();
@@ -91,6 +130,7 @@ var EventedLoop = require('eventedloop');
 				movingObject.cycle(dContext);
 			});
 			
+			cullStaticObjectsBehindPlayer();
 			staticObjects.cull();
 			staticObjects.each(function (staticObject, i) {
 				if (staticObject.cycle) {

@@ -8,11 +8,12 @@
     "build": "npm run build:game",
     "build:game": "browserify public/game/js/main.js -o public/game/dist/bikefree.js",
     "watch:game": "watchify public/game/js/main.js -o public/game/dist/bikefree.js -v",
+    "test": "vitest run",
     "start": "node server.js",
     "dev": "concurrently -k -n server,game -c green,cyan \"node server.js\" \"npm run watch:game\""
   },
   "engines": {
-    "node": ">=20"
+    "node": "25.x"
   },
   "dependencies": {
     "connect-mongo": "^5.1.0",
@@ -29,6 +30,7 @@
     "concurrently": "^10.0.3",
     "eventedloop": "^1.0.1",
     "hammerjs": "^2.0.8",
+    "vitest": "^4.1.10",
     "watchify": "^4.0.0"
   }
 }

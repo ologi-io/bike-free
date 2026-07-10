@@ -23,11 +23,11 @@
 	};
 
 	SpriteArray.prototype.cull = function() {
-		this.each(function (obj, i) {
-			if (obj.deleted) {
-				return (delete this[i]);
+		for (var i = this.length - 1; i >= 0; i--) {
+			if (!this[i] || this[i].deleted) {
+				this.splice(i, 1);
 			}
-		});
+		}
 	};
 
 	global.spriteArray = SpriteArray;
